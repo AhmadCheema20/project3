@@ -44,10 +44,8 @@ jobs:
         run: |
           wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
           unzip sdk-tools-linux-4333796.zip -d $HOME/android-sdk
-          echo "sdk.dir=$HOME/android-sdk" >> local.properties
-          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$HOME/android-sdk/tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/29.0.3:$PATH" >> $GITHUB_ENV
-          echo "y" | $HOME/android-sdk/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-29" "build-tools;29.0.3" "extras;android;m2repository" "extras;google;m2repository"
+          yes | $HOME/android-sdk/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
+          $HOME/android-sdk/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-29" "build-tools;29.0.3" "extras;android;m2repository" "extras;google;m2repository"
 
       - name: Verify installation
         run: |
