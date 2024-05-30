@@ -2,6 +2,10 @@ name: CI
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 1,15 * *'
 
 jobs:
   build:
@@ -10,22 +14,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # used to cache dependencies with a timeout
       - name: Get Date
         id: get-date
         run: |
           echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
-          sudo apt-get update
-          sudo apt-get install build-essential
-          sudo apt-get install libstdc++6
-          sudo apt-get install aidl
         shell: bash
 
       - name: Cache Buildozer global directory
         uses: actions/cache@v2
         with:
           path: .buildozer_global
-          key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
+          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
 
       - uses: actions/cache@v2
         with:
@@ -36,7 +35,7 @@ jobs:
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          command: buildozer android debug
+          command: echo y | buildozer -v android debug
           buildozer_version: master
 
       - name: Upload artifacts
