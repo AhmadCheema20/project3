@@ -9,7 +9,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      # used to cache dependencies with a timeout
       - name: Get Date
         id: get-date
         run: |
@@ -34,10 +33,15 @@ jobs:
           distribution: 'zulu'
           java-version: '8'
 
-      - name: Install Android SDK
+      - name: Install Buildozer and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y lib32stdc++6 lib32z1
+          sudo apt-get install -y python3-pip lib32stdc++6 lib32z1
+          pip3 install --upgrade pip
+          pip3 install buildozer cython==0.29.21 virtualenv
+
+      - name: Install Android SDK
+        run: |
           wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
           unzip sdk-tools-linux-4333796.zip -d $HOME/android-sdk
           echo "sdk.dir=$HOME/android-sdk" >> local.properties
@@ -45,15 +49,20 @@ jobs:
           echo "PATH=$HOME/android-sdk/tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/29.0.3:$PATH" >> $GITHUB_ENV
           echo "y" | $HOME/android-sdk/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-29" "build-tools;29.0.3" "extras;android;m2repository" "extras;google;m2repository"
 
+      - name: Verify installation
+        run: |
+          java -version
+          javac -version
+          buildozer --version
+          echo $ANDROID_HOME
+          echo $PATH
+
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          command: buildozer android debug
-          buildozer_version: master
+        run: |
+          buildozer android debug
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: package
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: .buildozer/android/platform/build/dists/*/bin/*.apk
