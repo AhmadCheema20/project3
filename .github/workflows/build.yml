@@ -11,8 +11,7 @@ jobs:
 
       - name: Get Date
         id: get-date
-        run: |
-          echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
+        run: echo "::set-output name=date::$(date -u +'%Y%m%d')"
         shell: bash
 
       - name: Cache Buildozer global directory
@@ -36,7 +35,7 @@ jobs:
       - name: Install Buildozer and dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip lib32stdc++6 lib32z1
+          sudo apt-get install -y python3-pip lib32stdc++6 lib32z1 unzip
           pip3 install --upgrade pip
           pip3 install buildozer cython==0.29.21 virtualenv
 
@@ -48,6 +47,9 @@ jobs:
           yes | $HOME/android-sdk/tools/bin/sdkmanager --licenses
           $HOME/android-sdk/tools/bin/sdkmanager --update
           $HOME/android-sdk/tools/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "extras;android;m2repository" "extras;google;m2repository"
+          echo "export ANDROID_HOME=$HOME/android-sdk" >> $HOME/.bashrc
+          echo "export PATH=$HOME/android-sdk/tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/29.0.3:$PATH" >> $HOME/.bashrc
+          source $HOME/.bashrc
 
       - name: Verify Android SDK installation
         run: |
@@ -67,12 +69,9 @@ jobs:
           java -version
           javac -version
           buildozer --version
-          echo $ANDROID_HOME
-          echo $PATH
 
       - name: Build with Buildozer
-        run: |
-          buildozer android debug
+        run: buildozer android debug
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
