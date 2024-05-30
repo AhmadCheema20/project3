@@ -43,9 +43,24 @@ jobs:
       - name: Install Android SDK
         run: |
           wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
-          unzip sdk-tools-linux-4333796.zip -d $HOME/android-sdk
-          yes | $HOME/android-sdk/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-          $HOME/android-sdk/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-29" "build-tools;29.0.3" "extras;android;m2repository" "extras;google;m2repository"
+          mkdir -p $HOME/android-sdk
+          unzip -q sdk-tools-linux-4333796.zip -d $HOME/android-sdk
+          yes | $HOME/android-sdk/tools/bin/sdkmanager --licenses
+          $HOME/android-sdk/tools/bin/sdkmanager --update
+          $HOME/android-sdk/tools/bin/sdkmanager "platform-tools" "platforms;android-29" "build-tools;29.0.3" "extras;android;m2repository" "extras;google;m2repository"
+
+      - name: Verify Android SDK installation
+        run: |
+          ls -l $HOME/android-sdk/platform-tools
+          ls -l $HOME/android-sdk/platforms/android-29
+          ls -l $HOME/android-sdk/build-tools/29.0.3
+          ls -l $HOME/android-sdk/extras/android/m2repository
+          ls -l $HOME/android-sdk/extras/google/m2repository
+
+      - name: Set environment variables
+        run: |
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "PATH=$HOME/android-sdk/tools/bin:$HOME/android-sdk/platform-tools:$HOME/android-sdk/build-tools/29.0.3:$PATH" >> $GITHUB_ENV
 
       - name: Verify installation
         run: |
