@@ -1,35 +1,19 @@
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  schedule:
-    - cron: '0 0 1,15 * *'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
 
     steps:
       - uses: actions/checkout@v2
-      
-      - name: Install aidl
-        id: install-aidl
-        run: |
-     
-           sudo apt-get update
-           sudo apt-get install build-essential
-           sudo apt-get install libstdc++6
-           sudo apt-get install aidl 
-           
-        shell: bash
 
+      # used to cache dependencies with a timeout
       - name: Get Date
         id: get-date
         run: |
           echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
-          
         shell: bash
 
       - name: Cache Buildozer global directory
@@ -43,11 +27,28 @@ jobs:
           path: .buildozer
           key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
 
+      # Install required dependencies
+      - name: Set up JDK 8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 8
+
+      - name: Install Android SDK
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lib32stdc++6 lib32z1
+          wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip
+          unzip sdk-tools-linux-4333796.zip -d $HOME/android-sdk
+          echo "sdk.dir=$HOME/android-sdk" >> local.properties
+          echo "export ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "export PATH=$HOME/android-sdk/tools/bin:$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
+          echo "y" | $HOME/android-sdk/tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-29" "build-tools;29.0.3" "extras;android;m2repository" "extras;google;m2repository"
+
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          command: echo y | buildozer -v android debug
+          command: buildozer android debug
           buildozer_version: master
 
       - name: Upload artifacts
